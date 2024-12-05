@@ -1,0 +1,47 @@
+---
+title: "final proj"
+format: html
+editor: visual
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+```{r}
+solar_h2_potential <- read_csv(here('data', 'H2_Potential_from_Solar', 'H2_Potential_from_Solar.csv'))
+wind_h2_potential <- read_csv(here('data', 'H2_Potential_from_Wind', 'H2_Potential_from_Wind.csv'))
+```
+
+```{r}
+h2_potential <- full_join(solar_h2_potential, wind_h2_potential) |> 
+  clean_names() |> 
+   group_by(state) |> 
+  summarise_at(vars(population_in_2010, area_sq_km, total_utility_pv_hydrogen_potential_kg_yr, total_onshore_offshore_hydrogen_potential_kg_yr), sum, na.rm = TRUE) |> 
+  ungroup() |> 
+  pivot_longer(cols = c(total_utility_pv_hydrogen_potential_kg_yr, 
+             total_onshore_offshore_hydrogen_potential_kg_yr),
+    names_to = c("category", "type"),
+    names_sep = "_",
+    values_to = "value"
+  ) |> 
+   mutate(type = case_when(
+    type == "utility" ~ "pv_solar",
+    type == "onshore" ~ "wind_onshore_offshore",
+    TRUE ~ type
+  )) |> 
+  rename(h2_potential_kg_yr = value) |> 
+  select(!category)
+```
+
+*H~0~: There is no relationship in the probability of*
+
+```{r}
+
+```
+
+```{r}
+
+```
