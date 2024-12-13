@@ -115,6 +115,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h5 class="anchored" data-anchor-id="as-population-and-area-increases-does-the-potential-for-hydrogen-fuel-increase-as-well">As population and area increases, does the potential for hydrogen fuel increase as well?</h5>
 </section>
 </section>
+<section id="analysis-plan" class="level3">
+<h3 class="anchored" data-anchor-id="analysis-plan">Analysis Plan:</h3>
+<p>In this analysis, I plan to test both of my hypothesis by choosing a test statistic for my sample, and quantify the uncertainty with a null distribution. Next, I will calculate this test statistic as a point estimate up against my null distribution to visualize where the point lies. This will then allow me to find the P-Value, at which point I will reject or fail to reject the null hypothesis. Proceeding these tests, I want to visualize my data. I will compare the potentials of both solar and wind with regards to population. I am also curious at the R-squared, to see how strong this correlation is. I will add area as a predictor variable to test for an omitted variable bias, and discuss my results. This discussion will compare my plot results, and the R-squared of both linear models. I will add any additional visualizations in the case that it is needed to help see my results. This analysis ends with a discussion on the limitations of this study.</p>
+</section>
 <section id="load-libraries" class="level2">
 <h2 class="anchored" data-anchor-id="load-libraries">Load libraries</h2>
 <div class="cell" data-quiet="true">
@@ -137,7 +141,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="about-the-data" class="level2">
 <h2 class="anchored" data-anchor-id="about-the-data">About the Data</h2>
-<p>This data was accessed through the National Renewable Energy Laboratory (NREL). NREL provided two datasets of the hydrogen utility potential generated from both wind and solar. The metadata states in explicit detail that the amount of wind and solar power required to produce 1 kg of Hydrogen is 58.8 kWh. Due to these conversion rates being the same, I was able to compare these resources across one joined dataset.</p>
+<p>This data was accessed through the National Renewable Energy Laboratory (NREL). NREL provided two datasets of the hydrogen utility potential generated from both wind and solar. The methodoloy outlined in the metadata mentions how the potential is determined for both the wind and solar power sources. The metadata states in explicit detail that the amount of wind and solar power required to produce 1 kg of Hydrogen is 58.8 kWh. Due to these conversion rates being the same, I was able to compare these resources across one joined dataset.</p>
+<p>The land use assumption for PV cells states that only 10% of a 40 km × 40 km cell’s land area is assumed to be available for photovoltaic development. Within this 10%, only 30% of the area will be covered by solar panels. The electrolysis system requires 58.8 kWh to produce one kg of hydrogen.</p>
+<p>For onshore and offshore wind, the metadata identifies that the wind power uses the same production rate of 58.8 kWh/kg. For wind power, the study normalized hydrogen potential by county area (sq km) to ensure comparability across counties of different sizes. The normalization process minimizes biases introduced by geographic area, enabling a clearer understanding of regional potential based on renewable resource availability and efficiency. In other words, the potential to produce hydrogen from wind was normalized by county area to minimize differences in values based on the size of areas.</p>
+</section>
+<section id="data-wrangling" class="level2">
+<h2 class="anchored" data-anchor-id="data-wrangling">Data Wrangling</h2>
 <p>In this code chunk, I began with a full join of both my solar hydrogen potential and wind hydrogen potential dataframes. For consistency, I used <code>clean_names()</code> with the <code>janitor</code> package. Both dataframes are organized by state, area in square km, population in 2010, and hydrogen potential in kg per year. I grouped by state so that I could take the sum of each column that I am interested in, removing all <code>NA</code> values. I made sure to <code>ungroup()</code> to avoid errors later on. I needed to pivot my data frame into utility potential in kg per year and type of renewable resource that produced the hydrogen.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>h2_potential <span class="ot">&lt;-</span> <span class="fu">full_join</span>(solar_h2_potential, wind_h2_potential) <span class="sc">|&gt;</span> </span>
@@ -207,6 +216,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
+<p>To quantify the uncertainty, I created a null distribution as seen above, and made sure to calculate the point estimate with our difference in means. The point estimate is clearly located to the far left of the distribution, so we can see how this compares with our P-Value. Below our P-Value is calculated and it is so significant that it comes out to 0.</p>
 </section>
 <section id="p-value" class="level2">
 <h2 class="anchored" data-anchor-id="p-value">P-Value</h2>
@@ -224,7 +234,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="linear-regression-model" class="level2">
 <h2 class="anchored" data-anchor-id="linear-regression-model">Linear Regression Model</h2>
-<p>Now, we want to know how the type of source and population influence the hydrogen fuel potential using a linear model. I decided to use a linear regression model because my dependent variable is numerically trying to predict the hydrogen potential based on population and source type.</p>
+<p>Now, we want to know how the type of source and population influence the hydrogen fuel potential using a linear model. I decided to use a linear regression model because my dependent variable is numerically trying to predict the hydrogen potential based on population and source type. The two predictors are population in 2010 and source type, which are continuous and categorical.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit linear model</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>linear_model <span class="ot">&lt;-</span> <span class="fu">summary</span>(<span class="fu">lm</span>(h2_potential_kg_yr <span class="sc">~</span> population_in_2010 <span class="sc">+</span> type, <span class="at">data =</span> h2_potential))</span>
@@ -252,6 +262,9 @@ Residual standard error: 87390000000 on 99 degrees of freedom
 Multiple R-squared:  0.3186,    Adjusted R-squared:  0.3048 
 F-statistic: 23.14 on 2 and 99 DF,  p-value: 0.000000005666</code></pre>
 </div>
+</div>
+<p><em>Note</em> the R-squared here is 0.3048. Pretty low, right? Let’s look at the plot and then we can consider an omitted variable bias.</p>
+<div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Examine the p-values for the "2010 population" and "type" coefficients</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(h2_potential, <span class="fu">aes</span>(population_in_2010,</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                         h2_potential_kg_yr,</span>
@@ -266,12 +279,13 @@ F-statistic: 23.14 on 2 and 99 DF,  p-value: 0.000000005666</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="final-proj_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="final-proj_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>This plot shows that solar has a higher overall potential for producing hydrogen fuel based on the population in 2010 across the United States. We can see that even in the data itself, solar has greater values overall. This may be because existing PV cells are way more abundant in amount due to their smaller size and lower production/installation costs, despite wind . Whereas both offshore and onshore wind turbines are extremely large, with a single wind turbine blade equaling the length of a single football field. This not only confirms our initial hypothesis testing, but it confirms our initial question. On average, solar power is likely to have a greater overall potential for producing hydrogen as a renewable energy source than wind.</p>
+<p>An interesting thing I’d like to point out about this plot is our outlier. You may be wondering, what is that in the top right? This value is the hydrogen potential in kg per year for solar pv cells in Texas. The Texas population is 25,145,561 in 2010. The hydrogen potential for solar in Texas is 785,765,312,659 kg per year. Conversely, the onshore or offshore wind source for hydrogen potential in Texas at this same population is 1,320,799,106 kg per year. Clearly there is a significant difference in the potentials for both technologies likely due to the greater cost incentives and size of existing solar pv cells. This makes intuitive sense because of Texas’s notorious solar resource and lots of land. This makes me to think that perhaps area may be a better predictor of this study.</p>
 <p>This leads me to my next question regarding an added variable:</p>
 <section id="as-population-and-area-increases-does-the-potential-for-hydrogen-fuel-increase-as-well-1" class="level5">
 <h5 class="anchored" data-anchor-id="as-population-and-area-increases-does-the-potential-for-hydrogen-fuel-increase-as-well-1">As population and area increases, does the potential for hydrogen fuel increase as well?</h5>
@@ -280,11 +294,7 @@ F-statistic: 23.14 on 2 and 99 DF,  p-value: 0.000000005666</code></pre>
 <section id="omitted-variable-bias" class="level2">
 <h2 class="anchored" data-anchor-id="omitted-variable-bias">Omitted Variable Bias</h2>
 <p>Now, that we have seen that solar has a greater overall potential for producing hydrogen, I am curious to see if there is an omitted variable bias in the previous model. I want to include the land area per state to see if there is a stronger predictor.</p>
-<section id="disclaimer" class="level3">
-<h3 class="anchored" data-anchor-id="disclaimer">Disclaimer</h3>
-<p>The methodoloy outlined in the metadata mentions how the potential is determined for both the wind and solar power sources. The land use assumption for PV cells states that only 10% of a 40 km × 40 km cell’s land area is assumed to be available for photovoltaic development. Within this 10%, only 30% of the area will be covered by solar panels. The electrolysis system requires 58.8 kWh to produce one kg of hydrogen.</p>
-<p>For onshore and offshore wind, the metadata identifies that the wind power uses the same production rate of 58.8 kWh/kg. For wind power, the study normalized hydrogen potential by county area (sq km) to ensure comparability across counties of different sizes. The normalization process minimizes biases introduced by geographic area, enabling a clearer understanding of regional potential based on renewable resource availability and efficiency. In other words, the potential to produce hydrogen from wind was normalized by county area to minimize differences in values based on the size of areas.</p>
-<p>However, the raw data is listed in kg per year, indicating that this is the <em>Total Hydrogen Potential</em> as opposed to the Normalized potential, which would be in kg/yr/<sub>m</sub>2. With this in mind, it is fair to test if there is an omitted variable bias for area by state</p>
+<p>Note: The raw data is listed in kg per year, indicating that this is the <em>Total Hydrogen Potential</em> as opposed to the Normalized potential, which would be in kg/yr/<sub>km</sub>2. With this in mind, it is fair to test if there is an omitted variable bias for area by state due to it not being included to calculate the potential itself.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(h2_potential_kg_yr <span class="sc">~</span> population_in_2010 <span class="sc">+</span> type <span class="sc">+</span> area_sq_km, <span class="at">data =</span> h2_potential)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -317,94 +327,71 @@ Multiple R-squared:  0.4033,    Adjusted R-squared:  0.385
 F-statistic: 22.08 on 3 and 98 DF,  p-value: 0.00000000005266</code></pre>
 </div>
 </div>
+<p><strong>Here</strong> we see that the adjusted R-squared is 0.385. While this correlation is still fairly weak,it increased when area was added. This leads me to believe that perhaps there still is an omitted variable bias that is not included in the data. For future studies, it may be valuable to use data on solar radiation or average wind speeds in each of these states and compare separately by type.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># solar_h2_potential &lt;- function(population_in_2010, area_sq_km) {</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   intercept &lt;- 7.128e10</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   coef_population &lt;- 2.408e3</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   coef_area &lt;- 1.372e5</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   </span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   intercept + coef_population * population_in_2010 + coef_area * area_sq_km</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># }</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co"># wind_h2_potential &lt;- function(population_in_2010, area_sq_km) {</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#   intercept &lt;- -3.912e10</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co">#   coef_population &lt;- 2.408e3</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">#   coef_area &lt;- 1.372e5</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">#   </span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">#   intercept + coef_population * population_in_2010 + coef_area * area_sq_km</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co"># }</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co"># ggplot(h2_potential,aes(y=h2_potential_kg_yr,x=population_in_2010,color=type))+geom_point()+</span></span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co">#         stat_function(fun=solar_h2_potential,geom="line",color=scales::hue_pal()(2)[1])+</span></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="co">#         stat_function(fun=wind_h2_potential,geom="line",color=scales::hue_pal()(2)[2])</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>h2_potential <span class="sc">|&gt;</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(type <span class="sc">==</span> <span class="st">'wind_onshore_offshore'</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> area_sq_km, </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>                         <span class="at">y =</span> h2_potential_kg_yr)) <span class="sc">+</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">'Area (sq km)'</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">'H2 Potential (kg/year)'</span>,</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">'Hydrogen Potential for Onshore and Offshore Wind'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="final-proj_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
+</div>
+</div>
+<p>Because our previous combined plot was hard to decipher the values for wind hydrogen potential, I wanted to examine the relationship between just wind and area, and just wind and population in 2010. Using <code>geom_smooth()</code> it is clear that the line is less steep and positive. Let’s look at the distribution between population and Hydrogen potential.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># # Define the coefficients from your model</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># coef_intercept &lt;- 7.128e10</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># coef_population &lt;- 2.408e3</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># coef_area &lt;- 1.372e5</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># coef_type_wind &lt;- -1.104e11</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># # Equation for Solar</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># equation_solar &lt;- function(population_in_2010) {</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co">#   coef_intercept + coef_population * population_in_2010</span></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># }</span></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co"># # Equation for Wind</span></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># equation_wind &lt;- function(population_in_2010) {</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co">#   coef_intercept + coef_type_wind + coef_population * population_in_2010</span></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co"># }</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>h2_potential <span class="sc">|&gt;</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(type <span class="sc">==</span> <span class="st">'wind_onshore_offshore'</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> population_in_2010, </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>                         <span class="at">y =</span> h2_potential_kg_yr)) <span class="sc">+</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">'Population in 2010'</span>,</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">'H2 Potential (kg/year)'</span>,</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">'Hydrogen Potential i for Onshore and Offshore Wind'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="final-proj_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
+</div>
+</div>
+<p>Here, we can see that the slope is more positive and looks generally more normally distributed. This makes sense because the population sizes are dynamic while state area is a fixed value per state.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># # Fit the model</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># fit2 &lt;- lm(h2_potential_kg_yr ~ population_in_2010 + type + area_sq_km, data = h2_potential)</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># # Add fitted values to the dataset</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co"># fitted_data &lt;- augment(fit2)</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co"># # Calculate the median of `area_sq_km` for visualization (this will control for area)</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># median_area &lt;- median(h2_potential$area_sq_km, na.rm = TRUE)</span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co"># # Plot the data with linear regression lines, accounting for `area_sq_km`</span></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co"># ggplot(h2_potential, aes(x = population_in_2010, y = h2_potential_kg_yr, color = type)) +</span></span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co">#   geom_point() +  # Plot the actual data points</span></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="co">#   geom_smooth(method = "lm", se = FALSE, aes(color = type), </span></span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="co">#               formula = y ~ x + area_sq_km, data = h2_potential %&gt;%</span></span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="co">#                 mutate(area_sq_km = median_area)) +  # Fix `area_sq_km` at its mean value</span></span>
-<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="co">#   labs(</span></span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="co">#     x = "Population in 2010",</span></span>
-<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="co">#     y = "H2 Potential in kg/yr",</span></span>
-<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="co">#     color = "Type"</span></span>
-<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="co">#   ) +</span></span>
-<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="co">#   scale_colour_discrete(name = "Type") +</span></span>
-<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="co">#   theme_minimal()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>h2_potential <span class="sc">|&gt;</span> </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(type <span class="sc">==</span> <span class="st">'pv_solar'</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> area_sq_km, </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>                         <span class="at">y =</span> h2_potential_kg_yr)) <span class="sc">+</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">'Area (sq km)'</span>,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">'H2 Potential (kg/year)'</span>,</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">'Hydrogen Potential in US States for Solar PV Sources'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="final-proj_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
 </div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># # Fit the model</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># fit2 &lt;- lm(h2_potential_kg_yr ~ population_in_2010 + type + area_sq_km, data = h2_potential)</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># # Add fitted values to the dataset</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co"># fitted_data &lt;- augment(fit2) %&gt;%</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   mutate(type = h2_potential$type) # Ensure type is included for proper grouping</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co"># # Plot with linear fitted lines</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co"># h2_potential %&gt;% </span></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co">#   ggplot(aes(x = population_in_2010, y = h2_potential_kg_yr, color = type)) +</span></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co">#   geom_point() + </span></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="co">#   geom_line(data = fitted_data, aes(y = .fitted, x = population_in_2010, color = factor(type))) +</span></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="co">#   labs(</span></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co">#     x = "Population in 2010",</span></span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co">#     y = "H2 Potential in kg/yr",</span></span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="co">#     color = "Type"</span></span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="co">#   ) +</span></span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="co">#   scale_colour_discrete(name = "Type") +</span></span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="co">#   theme_minimal()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section>
+</div>
+<p>Out of curiosity, I wanted to see the distribution of area and hydrogen potential. This is very interesting to me because it appears that the residuals are smaller, with the two outliers as exceptions. Similarly, this line has a positive slope.</p>
 </section>
 <section id="limitations" class="level2">
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
+<p>This study is limited by the scope of the data. Considering that the data includes the population from 2010, the values of hydrogen potential and population have likely had significant changes since then. The sampling strategy of the data utilized satellite imagery and identified land areas that are designated for wind and solar production, and eliminated small clean energy wind and solar plants that would not generate enough energy to power the hydrogen plants. The limitations of this are that there is not a ton of explanation further about the data and it is generally not clear about their inclusions other than these existing technology designations and the conversion rate. With the new presidency, there may be less incentives for green hydrogen and further studies may need to be conducted to predict more updated potential values.</p>
 </section>
 <section id="references" class="level2">
 <h2 class="anchored" data-anchor-id="references">References</h2>

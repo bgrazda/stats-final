@@ -21,6 +21,9 @@ However, electrolysis can also be fueled by renewable power. This is known as *g
 
 ##### As population and area increases, does the potential for hydrogen fuel increase as well?
 
+### Analysis Plan:
+In this analysis, I plan to test both of my hypothesis by choosing a test statistic for my sample, and quantify the uncertainty with a null distribution. Next, I will calculate this test statistic as a point estimate up against my null distribution to visualize where the point lies. This will then allow me to find the P-Value, at which point I will reject or fail to reject the null hypothesis. Proceeding these tests, I want to visualize my data. I will compare the potentials of both solar and wind with regards to population. I am also curious at the R-squared, to see how strong this correlation is. I will add area as a predictor variable to test for an omitted variable bias, and discuss my results. This discussion will compare my plot results, and the R-squared of both linear models. I will add any additional visualizations in the case that it is needed to help see my results. This analysis ends with a discussion on the limitations of this study.
+
 ## Load libraries
 
 ```{r}
@@ -49,8 +52,13 @@ wind_h2_potential <- read_csv(here('data', 'H2_Potential_from_Wind', 'H2_Potenti
 
 ## About the Data
 
-This data was accessed through the National Renewable Energy Laboratory (NREL). NREL provided two datasets of the hydrogen utility potential generated from both wind and solar. The metadata states in explicit detail that the amount of wind and solar power required to produce 1 kg of Hydrogen is 58.8 kWh. Due to these conversion rates being the same, I was able to compare these resources across one joined dataset.
+This data was accessed through the National Renewable Energy Laboratory (NREL). NREL provided two datasets of the hydrogen utility potential generated from both wind and solar. The methodoloy outlined in the metadata mentions how the potential is determined for both the wind and solar power sources. The metadata states in explicit detail that the amount of wind and solar power required to produce 1 kg of Hydrogen is 58.8 kWh. Due to these conversion rates being the same, I was able to compare these resources across one joined dataset.
 
+The land use assumption for PV cells states that only 10% of a 40 km × 40 km cell's land area is assumed to be available for photovoltaic development. Within this 10%, only 30% of the area will be covered by solar panels. The electrolysis system requires 58.8 kWh to produce one kg of hydrogen.
+
+For onshore and offshore wind, the metadata identifies that the wind power uses the same production rate of 58.8 kWh/kg. For wind power, the study normalized hydrogen potential by county area (sq km) to ensure comparability across counties of different sizes. The normalization process minimizes biases introduced by geographic area, enabling a clearer understanding of regional potential based on renewable resource availability and efficiency. In other words, the potential to produce hydrogen from wind was normalized by county area to minimize differences in values based on the size of areas.
+
+## Data Wrangling
 In this code chunk, I began with a full join of both my solar hydrogen potential and wind hydrogen potential dataframes. For consistency, I used `clean_names()` with the `janitor` package. Both dataframes are organized by state, area in square km, population in 2010, and hydrogen potential in kg per year. I grouped by state so that I could take the sum of each column that I am interested in, removing all `NA` values. I made sure to `ungroup()` to avoid errors later on. I needed to pivot my data frame into utility potential in kg per year and type of renewable resource that produced the hydrogen.
 
 ```{r}
@@ -115,6 +123,7 @@ ggplot(tibble(null_dist), aes(null_dist)) +
   labs(title = 'Randomization Test')
 
 ```
+To quantify the uncertainty, I created a null distribution as seen above, and made sure to calculate the point estimate with our difference in means. The point estimate is clearly located to the far left of the distribution, so we can see how this compares with our P-Value. Below our P-Value is calculated and it is so significant that it comes out to 0.  
 
 ## P-Value
 
@@ -129,14 +138,16 @@ Based on the results of the analysis, I reject the null hypothesis that the type
 
 ## Linear Regression Model
 
-Now, we want to know how the type of source and population influence the hydrogen fuel potential using a linear model. I decided to use a linear regression model because my dependent variable is numerically trying to predict the hydrogen potential based on population and source type.
+Now, we want to know how the type of source and population influence the hydrogen fuel potential using a linear model. I decided to use a linear regression model because my dependent variable is numerically trying to predict the hydrogen potential based on population and source type. The two predictors are population in 2010 and source type, which are continuous and categorical.  
 
 ```{r}
 # Fit linear model
 linear_model <- summary(lm(h2_potential_kg_yr ~ population_in_2010 + type, data = h2_potential))
 
 print(linear_model)
-
+```
+*Note* the R-squared here is 0.3048. Pretty low, right? Let's look at the plot and then we can consider an omitted variable bias.
+```{r}
 # Examine the p-values for the "2010 population" and "type" coefficients
 ggplot(h2_potential, aes(population_in_2010,
                          h2_potential_kg_yr,
@@ -153,6 +164,8 @@ ggplot(h2_potential, aes(population_in_2010,
 
 This plot shows that solar has a higher overall potential for producing hydrogen fuel based on the population in 2010 across the United States. We can see that even in the data itself, solar has greater values overall. This may be because existing PV cells are way more abundant in amount due to their smaller size and lower production/installation costs, despite wind . Whereas both offshore and onshore wind turbines are extremely large, with a single wind turbine blade equaling the length of a single football field. This not only confirms our initial hypothesis testing, but it confirms our initial question. On average, solar power is likely to have a greater overall potential for producing hydrogen as a renewable energy source than wind.
 
+An interesting thing I'd like to point out about this plot is our outlier. You may be wondering, what is that in the top right? This value is the hydrogen potential in kg per year for solar pv cells in Texas. The Texas population is 25,145,561 in 2010. The hydrogen potential for solar in Texas is 785,765,312,659 kg per year. Conversely, the onshore or offshore wind source for hydrogen potential in Texas at this same population is 1,320,799,106 kg per year. Clearly there is a significant difference in the potentials for both technologies likely due to the greater cost incentives and size of existing solar pv cells. This makes intuitive sense because of Texas's notorious solar resource and lots of land. This makes me to think that perhaps area may be a better predictor of this study.
+
 This leads me to my next question regarding an added variable:
 
 ##### As population and area increases, does the potential for hydrogen fuel increase as well?
@@ -161,112 +174,61 @@ This leads me to my next question regarding an added variable:
 
 Now, that we have seen that solar has a greater overall potential for producing hydrogen, I am curious to see if there is an omitted variable bias in the previous model. I want to include the land area per state to see if there is a stronger predictor.
 
-### Disclaimer
-
-The methodoloy outlined in the metadata mentions how the potential is determined for both the wind and solar power sources. The land use assumption for PV cells states that only 10% of a 40 km × 40 km cell's land area is assumed to be available for photovoltaic development. Within this 10%, only 30% of the area will be covered by solar panels. The electrolysis system requires 58.8 kWh to produce one kg of hydrogen.
-
-For onshore and offshore wind, the metadata identifies that the wind power uses the same production rate of 58.8 kWh/kg. For wind power, the study normalized hydrogen potential by county area (sq km) to ensure comparability across counties of different sizes. The normalization process minimizes biases introduced by geographic area, enabling a clearer understanding of regional potential based on renewable resource availability and efficiency. In other words, the potential to produce hydrogen from wind was normalized by county area to minimize differences in values based on the size of areas.
-
-However, the raw data is listed in kg per year, indicating that this is the *Total Hydrogen Potential* as opposed to the Normalized potential, which would be in kg/yr/~m~2. With this in mind, it is fair to test if there is an omitted variable bias for area by state
+Note: The raw data is listed in kg per year, indicating that this is the *Total Hydrogen Potential* as opposed to the Normalized potential, which would be in kg/yr/~km~2. With this in mind, it is fair to test if there is an omitted variable bias for area by state due to it not being included to calculate the potential itself. 
 
 ```{r}
 fit2 <- lm(h2_potential_kg_yr ~ population_in_2010 + type + area_sq_km, data = h2_potential)
 summary(fit2)
 
 ```
-```{r}
-# solar_h2_potential <- function(population_in_2010, area_sq_km) {
-#   intercept <- 7.128e10
-#   coef_population <- 2.408e3
-#   coef_area <- 1.372e5
-#   
-#   intercept + coef_population * population_in_2010 + coef_area * area_sq_km
-# }
-# 
-# wind_h2_potential <- function(population_in_2010, area_sq_km) {
-#   intercept <- -3.912e10
-#   coef_population <- 2.408e3
-#   coef_area <- 1.372e5
-#   
-#   intercept + coef_population * population_in_2010 + coef_area * area_sq_km
-# }
-# ggplot(h2_potential,aes(y=h2_potential_kg_yr,x=population_in_2010,color=type))+geom_point()+
-#         stat_function(fun=solar_h2_potential,geom="line",color=scales::hue_pal()(2)[1])+
-#         stat_function(fun=wind_h2_potential,geom="line",color=scales::hue_pal()(2)[2])
-```
-```{r}
-# # Define the coefficients from your model
-# coef_intercept <- 7.128e10
-# coef_population <- 2.408e3
-# coef_area <- 1.372e5
-# coef_type_wind <- -1.104e11
-# 
-# # Equation for Solar
-# equation_solar <- function(population_in_2010) {
-#   coef_intercept + coef_population * population_in_2010
-# }
-# 
-# # Equation for Wind
-# equation_wind <- function(population_in_2010) {
-#   coef_intercept + coef_type_wind + coef_population * population_in_2010
-# }
-
-```
+**Here** we see that the adjusted R-squared is 0.385. While this correlation is still fairly weak,it increased when area was added. This leads me to believe that perhaps there still is an omitted variable bias that is not included in the data. For future studies, it may be valuable to use data on solar radiation or average wind speeds in each of these states and compare separately by type. 
 
 ```{r}
-# 
-# # Fit the model
-# fit2 <- lm(h2_potential_kg_yr ~ population_in_2010 + type + area_sq_km, data = h2_potential)
-# 
-# # Add fitted values to the dataset
-# fitted_data <- augment(fit2)
-# 
-# # Calculate the median of `area_sq_km` for visualization (this will control for area)
-# median_area <- median(h2_potential$area_sq_km, na.rm = TRUE)
-
-# # Plot the data with linear regression lines, accounting for `area_sq_km`
-# ggplot(h2_potential, aes(x = population_in_2010, y = h2_potential_kg_yr, color = type)) +
-#   geom_point() +  # Plot the actual data points
-#   geom_smooth(method = "lm", se = FALSE, aes(color = type), 
-#               formula = y ~ x + area_sq_km, data = h2_potential %>%
-#                 mutate(area_sq_km = median_area)) +  # Fix `area_sq_km` at its mean value
-#   labs(
-#     x = "Population in 2010",
-#     y = "H2 Potential in kg/yr",
-#     color = "Type"
-#   ) +
-#   scale_colour_discrete(name = "Type") +
-#   theme_minimal()
-
+h2_potential |> 
+  filter(type == 'wind_onshore_offshore') |> 
+  ggplot(aes(x = area_sq_km, 
+                         y = h2_potential_kg_yr)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_classic() +
+  labs(x = 'Area (sq km)',
+       y = 'H2 Potential (kg/year)',
+       title = 'Hydrogen Potential for Onshore and Offshore Wind')
 ```
-
+Because our previous combined plot was hard to decipher the values for wind hydrogen potential, I wanted to examine the relationship between just wind and area, and just wind and population in 2010. Using `geom_smooth()` it is clear that the line is less steep and positive. Let's look at the distribution between population and Hydrogen potential. 
 
 ```{r}
-# 
-# # Fit the model
-# fit2 <- lm(h2_potential_kg_yr ~ population_in_2010 + type + area_sq_km, data = h2_potential)
-# 
-# # Add fitted values to the dataset
-# fitted_data <- augment(fit2) %>%
-#   mutate(type = h2_potential$type) # Ensure type is included for proper grouping
-# 
-# # Plot with linear fitted lines
-# h2_potential %>% 
-#   ggplot(aes(x = population_in_2010, y = h2_potential_kg_yr, color = type)) +
-#   geom_point() + 
-#   geom_line(data = fitted_data, aes(y = .fitted, x = population_in_2010, color = factor(type))) +
-#   labs(
-#     x = "Population in 2010",
-#     y = "H2 Potential in kg/yr",
-#     color = "Type"
-#   ) +
-#   scale_colour_discrete(name = "Type") +
-#   theme_minimal()
+h2_potential |> 
+  filter(type == 'wind_onshore_offshore') |> 
+  ggplot(aes(x = population_in_2010, 
+                         y = h2_potential_kg_yr)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_classic() +
+  labs(x = 'Population in 2010',
+       y = 'H2 Potential (kg/year)',
+       title = 'Hydrogen Potential i for Onshore and Offshore Wind')
 
 ```
+Here, we can see that the slope is more positive and looks generally more normally distributed. This makes sense because the population sizes are dynamic while state area is a fixed value per state. 
 
+```{r}
+h2_potential |> 
+  filter(type == 'pv_solar') |> 
+  ggplot(aes(x = area_sq_km, 
+                         y = h2_potential_kg_yr)) +
+  geom_point() +
+  geom_smooth(method = 'lm', se = FALSE) +
+  theme_classic() +
+  labs(x = 'Area (sq km)',
+       y = 'H2 Potential (kg/year)',
+       title = 'Hydrogen Potential in US States for Solar PV Sources')
+
+```
+Out of curiosity, I wanted to see the distribution of area and hydrogen potential. This is very interesting to me because it appears that the residuals are smaller, with the two outliers as exceptions. Similarly, this line has a positive slope. 
 
 ## Limitations
+This study is limited by the scope of the data. Considering that the data includes the population from 2010, the values of hydrogen potential and population have likely had significant changes since then. The sampling strategy of the data utilized satellite imagery and identified land areas that are designated for wind and solar production, and eliminated small clean energy wind and solar plants that would not generate enough energy to power the hydrogen plants. The limitations of this are that there is not a ton of explanation further about the data and it is generally not clear about their inclusions other than these existing technology designations and the conversion rate. With the new presidency, there may be less incentives for green hydrogen and further studies may need to be conducted to predict more updated potential values. 
 
 ## References
 
