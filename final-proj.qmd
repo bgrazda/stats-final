@@ -7,6 +7,7 @@ execute:
   warning: false
   message: false
   eval: true
+image: Green-Hydrogen.jpg
 ---
 
 **Background:** Hydrogen fuel cells powered by solar and wind power is a huge possibility in the transition for a low carbon society. The Biden administration invested \$7 billion in seven green hydrogen hub projects as a pathway for decarbonization and potentially reaching net zero emissions by 2050.
